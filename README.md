@@ -1,41 +1,146 @@
-# AI Resume / Job Matcher — Backend
+# AI-Powered Resume / Job Matcher
 
-Spring Boot REST API that analyzes how well a resume matches a given job description using Google's Gemini API. Extracts text from uploaded resumes (PDF/DOCX), sends it along with the job description to Gemini with a structured prompt, and returns a match score, matched/missing skills, and improvement suggestions as JSON.
+A full-stack web application that analyzes how well a resume matches a job description using Google's Gemini API. Upload a resume, paste a job description, and instantly get a match score, a breakdown of matched vs. missing skills, and AI-generated suggestions to improve your resume.
+
+---
+
+## Demo
+
+*(Add a screenshot or GIF of the app here once deployed)*
+
+```
+![App Screenshot](./screenshot.png)
+```
+
+---
 
 ## Tech Stack
 
-- **Java 21**
-- **Spring Boot 3.4**
-- **Spring Web** (REST APIs)
-- **Apache PDFBox** — PDF text extraction
-- **Apache POI** — DOCX text extraction
-- **WebClient** — HTTP calls to Gemini API
-- **Google Gemini API** (`gemini-1.5-flash`) — AI-powered resume analysis
-- **Maven** — build tool
+**Backend**
+- Java 21, Spring Boot 3.4
+- Apache PDFBox / Apache POI — resume text extraction (PDF/DOCX)
+- Spring WebClient — Gemini API integration
+- Maven
+
+**Frontend**
+- React 18 + Vite
+- Recharts — score visualization
+- Fetch API
+
+**AI**
+- Google Gemini API (`gemini-1.5-flash`) — free tier
+
+---
 
 ## Features
 
-- Upload a resume (PDF or DOCX) via multipart form-data
-- Paste any job description as plain text
-- Returns:
+- Upload a resume (PDF or DOCX) and paste any job description
+- AI-generated match analysis:
   - Match percentage (0–100)
-  - List of matched skills
-  - List of missing skills required by the job
-  - Actionable suggestions to improve the resume
-- Centralized error handling for invalid files, oversized uploads, and Gemini API failures
+  - Matched skills
+  - Missing skills required by the job
+  - Actionable resume improvement suggestions
+- Clean, responsive dark-mode UI with a visual score gauge
+- Centralized error handling on the backend for invalid files, oversized uploads, and API failures
 
-## API Endpoint
+---
+
+## Architecture
+
+```
+┌─────────────┐   upload resume +    ┌──────────────────┐      HTTPS
+│   React     │   paste JD           │   Spring Boot     │ ──────────────▶ Gemini API
+│  Frontend   │ ────────────────────▶│    Backend        │
+│ (Vite)      │◀──────────────────── │                    │
+└─────────────┘   match score +      └──────────────────┘
+                   suggestions (JSON)
+```
+
+1. User uploads a resume and pastes a job description in the React frontend
+2. The Spring Boot backend extracts plain text from the resume file
+3. Backend sends resume text + job description to Gemini with a structured, JSON-constrained prompt
+4. Gemini returns a match score, skill comparison, and suggestions
+5. Frontend renders the results as a score gauge, skills list, and suggestion cards
+
+---
+
+## Project Structure
+
+```
+ai-resume-job-matcher/
+├── backend/            # Spring Boot REST API
+│   ├── src/main/java/com/yourname/matcher/
+│   │   ├── controller/
+│   │   ├── service/
+│   │   ├── dto/
+│   │   ├── exception/
+│   │   └── config/
+│   ├── src/main/resources/application.properties
+│   └── README.md
+├── frontend/            # React + Vite app
+│   ├── src/
+│   │   ├── components/
+│   │   ├── services/
+│   │   └── App.jsx
+│   └── README.md
+└── README.md            # you are here
+```
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Java 21+ and Maven 3.8+
+- Node.js 18+
+- A free Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
+
+### 1. Clone the repository
+
+```bash
+git clone <your-repo-url>
+cd ai-resume-job-matcher
+```
+
+### 2. Run the backend
+
+```bash
+cd backend
+
+# Set your Gemini API key as an environment variable
+export GEMINI_API_KEY=your_key_here      # macOS/Linux
+$env:GEMINI_API_KEY="your_key_here"      # Windows PowerShell
+
+mvn spring-boot:run
+```
+Backend runs on `http://localhost:8080`
+
+### 3. Run the frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Frontend runs on `http://localhost:5173`
+
+For more detail on each part, see [`backend/README.md`](./backend/README.md) and [`frontend/README.md`](./frontend/README.md).
+
+---
+
+## API Reference
 
 ```
 POST /match
 Content-Type: multipart/form-data
 
 Fields:
-  resume          (file, required)  — PDF or DOCX
-  jobDescription  (text, required)  — Job description as plain text
+  resume          (file, required) — PDF or DOCX
+  jobDescription  (text, required) — plain text job description
 ```
 
-**Example success response:**
+**Example response:**
 ```json
 {
   "matchPercent": 62,
@@ -48,75 +153,17 @@ Fields:
 }
 ```
 
-**Example error response:**
-```json
-{
-  "timestamp": "2026-07-20T18:12:03",
-  "status": 400,
-  "error": "Invalid Input",
-  "message": "Unsupported file type"
-}
-```
+---
 
-## Getting Started
+## Engineering Notes
 
-### Prerequisites
+- **Prompt design:** Gemini is instructed to respond only in strict JSON, which keeps parsing reliable instead of relying on free-text extraction.
+- **Cost-conscious choice:** Uses Gemini's free tier and the lightweight `gemini-1.5-flash` model — sufficient for text analysis at this scale without ongoing cost.
+- **Security:** API keys are never hardcoded — always injected via environment variables. CORS is currently open for local development and should be restricted before any production deployment.
+- **Possible future improvements:** caching repeated resume/JD comparisons, supporting more file formats, adding a "resume rewrite" feature, rate-limiting per user.
 
-- Java 21+
-- Maven 3.8+
-- A free Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
-
-### Setup
-
-1. Clone the repository
-   ```bash
-   git clone <your-repo-url>
-   cd backend
-   ```
-
-2. Set your Gemini API key as an environment variable (never hardcode it):
-   ```bash
-   # macOS/Linux
-   export GEMINI_API_KEY=your_key_here
-
-   # Windows (PowerShell)
-   $env:GEMINI_API_KEY="your_key_here"
-   ```
-
-3. Run the application
-   ```bash
-   mvn spring-boot:run
-   ```
-
-4. The API will be available at `http://localhost:8080`
-
-### Configuration
-
-Key settings in `application.properties`:
-```properties
-gemini.api.key=${GEMINI_API_KEY}
-gemini.api.base-url=https://generativelanguage.googleapis.com/v1beta
-spring.servlet.multipart.max-file-size=5MB
-spring.servlet.multipart.max-request-size=5MB
-```
-
-## Project Structure
-
-```
-src/main/java/com/yourname/matcher/
-├── controller/       # REST endpoints
-├── service/          # Resume parsing, Gemini API calls, orchestration
-├── dto/              # Request/response models
-├── exception/        # Centralized error handling
-└── config/           # WebClient and other bean configuration
-```
-
-## Notes
-
-- Uses Gemini's free tier — no cost to run for personal/portfolio use
-- Resume text extraction supports `.pdf` and `.docx` only
-- CORS is currently open (`@CrossOrigin(origins = "*")`) for local development; restrict this before any production deployment
+---
 
 ## License
 
-This project is for educational/portfolio purposes.
+This project is for educational and portfolio purposes.

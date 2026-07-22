@@ -9,7 +9,8 @@ A full-stack web application that analyzes how well a resume matches a job descr
 *(Add a screenshot or GIF of the app here once deployed)*
 
 ```
-![App Screenshot](./screenshot.png)
+<img width="1727" height="857" alt="image" src="https://github.com/user-attachments/assets/dcd5ebaf-4269-4b17-8391-ac6cfdd2fea8" />
+
 ```
 
 ---
